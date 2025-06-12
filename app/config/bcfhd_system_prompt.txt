@@ -1,0 +1,115 @@
+# BCFHD Complaint Management Bot: Configuration
+
+# ------------------------------------------
+# Institution Information (BCFHD)
+# ------------------------------------------
+institution:
+  name: "Bena Charity for Human Development (BCFHD)"
+  description: "A charitable organization focused on implementing humanitarian projects in Yemen."
+  website: "https://bcfhd.org/" # Ensure this is the correct and current website
+  contact_email: "bena@bcfhd.org" # Updated as per your information
+  timezone: "Asia/Aden"
+
+# ------------------------------------------
+# BCFHD Bot Specific Settings
+# ------------------------------------------
+bcfhd_bot_settings:
+  google_sheet_id: "1W0Qx3W9oMZQrEj2txwNhvEjG7QDurEyhNy6uM9nT-r8"
+  critical_complaint_email: "abuamr.dubai.bcfhd@gmail.com"
+  complaints_sheet_name: "complaints"
+  beneficiary_data_sheet_name: "data"
+  classification_key_sheet_name: "key"
+
+# ------------------------------------------
+# AI Models Configuration
+# ------------------------------------------
+ai_models:
+  # --- OpenRouter Configuration ---
+  primary_model: "deepseek/deepseek-prover-v2:free"
+  fallback_models:
+    - "mistralai/mistral-small-3.1-24b-instruct:free"
+    - "microsoft/phi-4-reasoning:free"
+    - "nousresearch/deephermes-3-mistral-24b-preview:free"
+    - "qwen/qwen3-4b:free"
+    - "deepseek/deepseek-r1-distill-qwen-32b:free"
+  
+  base_url: "https://openrouter.ai/api/v1/chat/completions"
+  timeout: 60               # Increased for potentially complex LLM tasks
+  max_tokens: 2500          # Sufficient for detailed classification/summarization outputs
+  temperature: 0.3          # Lower for more factual and less creative outputs
+  max_retries: 3
+  retry_delay: 3            # Slightly longer delay between retries
+  max_consecutive_failures: 5
+  rate_limit_window: 60
+  
+  min_response_length: 3    # For very short structured outputs like simple JSON
+  max_response_length: 8192 # Common context window size, adjust if models have lower limits
+  preserve_markdown: false
+
+  fallback_responses:       # Keep these generic or translate to Arabic if preferred
+    - "I apologize, but I'm currently experiencing technical difficulties. Please try again in a few moments."
+    - "I'm temporarily unable to process your request due to system issues. Please contact support if this persists."
+
+  # --- Direct Hugging Face API Fallback Configuration ---
+  direct_fallback_enabled: true
+  huggingface_direct_provider:
+    provider_type: "huggingface"
+    api_key_env_var: "HF_API_TOKEN" # Environment variable for Hugging Face API Token
+    primary_model_hf: "google/gemma-7b-it"
+    fallback_models_hf:
+      - "HuggingFaceH4/zephyr-7b-beta"
+      - "NousResearch/Nous-Hermes-2-Mistral-7B-DPO"
+      - "openchat/openchat-3.5-1210" # Verify this HF model ID for Inference API availability
+      - "mistralai/Mistral-7B-Instruct-v0.1"
+    hf_timeout: 75                # Specific timeout for HF, potentially longer
+    hf_max_new_tokens: 2000       # Specific max_new_tokens for HF
+
+# ------------------------------------------
+# Cache Configuration
+# ------------------------------------------
+cache:
+  enabled: true # Add an option to enable/disable caching globally
+  cache_dir: "app_cache" # Relative to project root, ensure it's gitignored
+  max_size: 1000
+  ttl: 3600 # Default TTL for new categories: 1 hour
+  cleanup_interval: 300 # Cleanup every 5 minutes
+  categories:
+    ai_response: { ttl: 1800, persistent: true, compress: true }
+    classification_keys: { ttl: 86400, persistent: true, compress: false }
+    beneficiary_profiles: { ttl: 7200, persistent: true, compress: false }
+
+# ------------------------------------------
+# Prompt Builder Configuration
+# ------------------------------------------
+prompts:
+  # Path to the system prompt template file.
+  # This path is relative to the 'config_dir' passed to PromptBuilder's constructor.
+  # If PromptBuilder is initialized with config_dir='app/config/',
+  # it will look for 'app/config/bcfhd_system_prompt.txt'.
+  system_template_file: "bcfhd_system_prompt.txt" # Specific name for BCFHD
+  
+  # Contextual information specific to BCFHD to be injected into prompts.
+  # Key elements from your "System Message.txt" can go here.
+  bcfhd_protocol_info: |
+    Key BCFHD Complaint Handling Principles:
+    - Interact with empathy, patience, and full professional respect.
+    - Maintain strict confidentiality for all beneficiary information.
+    - Escalate critical complaints (PSEA, severe harm, rights violations by BCFHD projects) immediately according to BCFHD protocol.
+    - When possible, verify collected information with the beneficiary before final submission.
+    - If the bot cannot assist or if requested, provide BCFHD's direct contact channels.
+    - For internal processing tasks (e.g., data for Google Sheets), ensure outputs like summaries and classifications are in English unless explicitly stated otherwise for user-facing messages.
+
+  max_context_length: 6000 # Max characters for the {context} placeholder in the prompt
+  max_prompt_length: 8000  # Max total characters for the entire prompt sent to LLM
+  context_truncation_strategy: 'smart'
+  prompt_optimization: true
+
+# ------------------------------------------
+# Logging Configuration
+# ------------------------------------------
+logging:
+  level: "INFO" # Use "DEBUG" during development for more verbose output
+  log_file_path: "logs/bcfhd_bot.log" # Ensure 'logs' directory is writable
+  max_file_size_mb: 10
+  backup_count: 5
+  console_output: true
