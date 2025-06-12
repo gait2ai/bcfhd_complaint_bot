@@ -1,6 +1,6 @@
 # BCFHD Complaint Management Bot
 
-![AIGaite Logo](./assets/logo_192.png)
+![AIGaite Logo](./assets/logo_135.png)
 
 The BCFHD Complaint Management Bot is a Telegram-based application designed to help the Bena Charity for Human Development (BCFHD) efficiently manage and process beneficiary complaints and suggestions.
 
